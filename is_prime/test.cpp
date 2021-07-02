@@ -14,10 +14,14 @@ TEST(IsPrime, Two) {
   ASSERT_TRUE(IsPrime(2));
 }
 
-TEST(IsPrime, Even) {
+TEST(IsPrime, TwentyFive) {
   TimeoutGuard guard(10ms);
+  ASSERT_FALSE(IsPrime(25));
+}
+
+TEST(IsPrime, Even) {
+  TimeoutGuard guard(300ms);
   for (size_t i = 4; i < 10000000; i += 2) {
     EXPECT_FALSE(IsPrime(i));
   }
 }
-
