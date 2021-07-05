@@ -10,12 +10,12 @@
 class HelloWorld {
 private:
     std::vector<std::thread> threads;
-    std::mutex m;
+    std::mutex mutex;
 
-    size_t num_threads;
+    const size_t num_threads;
 
     auto hello_world_print(std::ostream& os) {
-        std::unique_lock<std::mutex> lock(m);
+        std::unique_lock<std::mutex> lock(mutex);
         os << kHelloPrefix << std::this_thread::get_id() << "\n";
     }
 
