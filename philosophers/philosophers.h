@@ -1,6 +1,7 @@
 #pragma once
 
 #include <mutex>
+#include <thread>
 
 
 class Fork {
@@ -42,12 +43,20 @@ public:
 
     void Eat() {
         if (id == 1) {
-            while (!right_fork->TryGet());
-            while (!left_fork->TryGet());
+            while (!right_fork->TryGet()) {
+                std::this_thread::yield();
+            }
+            while (!left_fork->TryGet()) {
+                std::this_thread::yield();
+            }
             return;
         }
-        while (!left_fork->TryGet());
-        while (!right_fork->TryGet());
+        while (!left_fork->TryGet()) {
+            std::this_thread::yield();
+        }
+        while (!right_fork->TryGet()) {
+            std::this_thread::yield();
+        }
     }
 
     void Think() {
@@ -56,7 +65,7 @@ public:
     }
 
 private:
-    size_t id;
+    const size_t id;
     Fork* left_fork;
     Fork* right_fork;
 };
