@@ -1,31 +1,40 @@
 #pragma once
 
+#include <atomic>
+#include <mutex>
+#include <shared_mutex>
 #include <vector>
 
 
 template <typename T>
 class ThreadSafeVector {
- public:
-  ThreadSafeVector() {
-  }
+private:
+    mutable std::shared_mutex shared_mutex;
+    std::atomic<int> vector_size = 0;
+    std::vector<T> vector;
+    bool is_reallocating = false;
 
-  T operator[](size_t index) const {
-    // Your code
-    return vector_[index];
-  }
+public:
+    ThreadSafeVector() = default;
 
-  size_t Size() const {
-    // Your code
-    return vector_.size();
-  }
+    T operator[](size_t index) const {
+        std::shared_lock<std::shared_mutex> shared_lock(shared_mutex);
+        while (is_reallocating);
+        return vector[index];
+    }
 
-  void PushBack(const T& value) {
-    // Your code
-    vector_.push_back(value);
-  }
+    size_t Size() const {
+        std::shared_lock<std::shared_mutex> shared_lock(shared_mutex);
+        return vector_size;
+    }
 
- private:
-  // Your code
-  std::vector<T> vector_;
+    void PushBack(const T& value) {
+        std::shared_lock<std::shared_mutex> shared_lock(shared_mutex);
+        if (vector.size() == vector.capacity()) {
+            is_reallocating = true;
+        }
+        vector.push_back(value);
+        ++vector_size;
+        is_reallocating = false;
+    }
 };
-
