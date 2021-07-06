@@ -14,7 +14,7 @@ private:
 
     const size_t num_threads;
 
-    auto hello_world_print(std::ostream& os) {
+    void hello_world_print(std::ostream& os) {
         std::unique_lock<std::mutex> lock(mutex);
         os << kHelloPrefix << std::this_thread::get_id() << "\n";
     }
