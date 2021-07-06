@@ -3,7 +3,6 @@
 #include <mutex>
 #include <thread>
 
-
 class Fork {
 public:
     Fork(size_t id)
@@ -14,59 +13,51 @@ public:
     }
 
     void Get() {
-        mutex.lock();
+        mutex_.lock();
     }
 
     bool TryGet() {
-        return mutex.try_lock();
+        return mutex_.try_lock();
     }
 
     void Put() {
-        mutex.unlock();
+        mutex_.unlock();
     }
 
 private:
     size_t id_;
-    std::mutex mutex;
+    std::mutex mutex_;
 };
 
 class Philosopher {
 public:
-    Philosopher(size_t id_, Fork* left_fork_, Fork* right_fork_)
-        : id(id_)
-        , left_fork(left_fork_)
-        , right_fork(right_fork_) {}
+    Philosopher(size_t id, Fork* left_fork, Fork* right_fork)
+        : id_(id)
+        , left_fork_(left_fork)
+        , right_fork_(right_fork) {}
 
     size_t Id() const {
-        return id;
+        return id_;
     }
 
     void Eat() {
-        if (id == 1) {
-            while (!right_fork->TryGet()) {
-                std::this_thread::yield();
-            }
-            while (!left_fork->TryGet()) {
-                std::this_thread::yield();
-            }
+        if (id_ == 1) {
+            right_fork_->Get();
+            left_fork_->Get();
             return;
         }
-        while (!left_fork->TryGet()) {
-            std::this_thread::yield();
-        }
-        while (!right_fork->TryGet()) {
-            std::this_thread::yield();
-        }
+        left_fork_->Get();
+        right_fork_->Get();
     }
 
     void Think() {
-        left_fork->Put();
-        right_fork->Put();
+        left_fork_->Put();
+        right_fork_->Put();
     }
 
 private:
-    const size_t id;
-    Fork* left_fork;
-    Fork* right_fork;
+    const size_t id_;
+    Fork* left_fork_;
+    Fork* right_fork_;
 };
 
