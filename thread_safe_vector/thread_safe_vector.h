@@ -12,6 +12,7 @@ private:
     mutable std::shared_mutex read_mutex_;
     mutable std::mutex write_mutex_;
     std::vector<T> vector_;
+    int vector_size_ = 0;
 
 public:
     ThreadSafeVector() = default;
@@ -23,7 +24,7 @@ public:
 
     size_t Size() const {
         std::shared_lock<std::shared_mutex> read_lock(read_mutex_);
-        return vector_.size();
+        return vector_size_;
     }
 
     void PushBack(const T& value) {
@@ -34,5 +35,6 @@ public:
         } else {
             vector_.push_back(value);
         }
+        ++vector_size_;
     }
 };
