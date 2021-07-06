@@ -9,28 +9,27 @@
 template <typename T>
 class ThreadSafeVector {
 private:
-    mutable std::shared_mutex read_mutex;
-    mutable std::mutex write_mutex;
-    std::atomic<int> vector_size = 0;
+    mutable std::shared_mutex read_mutex_;
+    mutable std::mutex write_mutex_;
     std::vector<T> vector_;
-    bool is_reallocating = false;
 
 public:
     ThreadSafeVector() = default;
 
     T operator[](size_t index) const {
-        std::shared_lock<std::shared_mutex> read_lock(read_mutex);
+        std::shared_lock<std::shared_mutex> read_lock(read_mutex_);
         return vector_[index];
     }
 
     size_t Size() const {
+        std::shared_lock<std::shared_mutex> read_lock(read_mutex_);
         return vector_.size();
     }
 
     void PushBack(const T& value) {
-        std::unique_lock<std::mutex> write_lock(write_mutex);
+        std::unique_lock<std::mutex> write_lock(write_mutex_);
         if (vector_.size() == vector_.capacity()) {
-            std::unique_lock<std::shared_mutex> read_lock(read_mutex);
+            std::unique_lock<std::shared_mutex> read_lock(read_mutex_);
             vector_.push_back(value);
         } else {
             vector_.push_back(value);
