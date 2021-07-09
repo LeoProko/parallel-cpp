@@ -5,8 +5,8 @@
 
 class TicketLock {
 private:
-    std::atomic<int> current_ticket_{0};
-    std::atomic<int> next_ticket_{0};
+    std::atomic<uint64_t> current_ticket_{0};
+    std::atomic<uint64_t> next_ticket_{0};
 
 public:
     TicketLock() = default;
