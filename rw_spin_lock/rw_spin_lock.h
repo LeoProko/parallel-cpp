@@ -1,28 +1,50 @@
 #pragma once
 
+#include <atomic>
+#include <thread>
 
 class RWSpinLock {
- public:
-  RWSpinLock() {
-  }
+private:
+    std::atomic<uint64_t> lock_counter_{0};
 
-  void LockRead() {
-    // Your code
-  }
+public:
+    RWSpinLock() = default;
 
-  void UnlockRead() {
-    // Your code
-  }
+    void LockRead() {
+        for (;;) {
+            uint64_t curent_lock = lock_counter_.load();
+            if (curent_lock & 1) {
+                std::this_thread::yield();
+                continue;
+            }
+            if (lock_counter_.compare_exchange_weak(curent_lock, curent_lock + 2)) {
+                break;
+            }
+        }
+    }
 
-  void LockWrite() {
-    // Your code
-  }
+    void UnlockRead() {
+        lock_counter_ -= 2;
+    }
 
-  void UnlockWrite() {
-    // Your code
-  }
+    void LockWrite() {
+        uint64_t curent_lock;
+        for (;;) {
+            curent_lock = lock_counter_.load();
+            if (curent_lock & 1) {
+                std::this_thread::yield();
+                continue;
+            }
+            if (lock_counter_.compare_exchange_weak(curent_lock, curent_lock + 1)) {
+                break;
+            }
+        }
+        while (lock_counter_.load() != 1) {
+            std::this_thread::yield();
+        }
+    }
 
- private:
-  // Your code
+    void UnlockWrite() {
+        lock_counter_ -= 1;
+    }
 };
-
