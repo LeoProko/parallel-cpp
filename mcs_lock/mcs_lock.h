@@ -2,10 +2,11 @@
 
 #include <atomic>
 #include <thread>
+#include <iostream>
 
 struct Node {
-    std::atomic<Node*> next;
-    std::atomic<bool> acq;
+    Node* next{nullptr};
+    bool is_locked{false};
 };
 
 class MCSLock {
@@ -18,24 +19,25 @@ public:
 
     void Lock() {
         Node* prev = tail.exchange(&node_);
-        prev->next = &node_;
-        while (!node_.acq) {
+        if (prev) {
+            prev->next = &node_;
+            node_.is_locked = true;
+        } else {
+            return;
+        }
+        while (node_.is_locked) {
             std::this_thread::yield();
         }
     }
 
     void Unlock() {
-        if (tail.load() != nullptr) {
-            node_.next.load()->acq = true;
-            return;
-        }
         Node* node_pointer = &node_;
         if (tail.compare_exchange_weak(node_pointer, nullptr)) {
             return;
         }
-        while (!node_.next.load()) {
+        while (!node_.next) {
             std::this_thread::yield();
         }
-        node_.next.load()->acq = true;
+        node_.next->is_locked = false;
     }
 };
