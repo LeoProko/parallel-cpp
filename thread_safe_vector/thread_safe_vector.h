@@ -35,6 +35,7 @@ public:
         } else {
             vector_.push_back(value);
         }
+        std::unique_lock<std::shared_mutex> read_lock(read_mutex_);
         ++vector_size_;
     }
 };
