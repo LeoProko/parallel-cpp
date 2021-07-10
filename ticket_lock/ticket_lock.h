@@ -12,7 +12,7 @@ public:
     TicketLock() = default;
 
     void Lock() {
-        int my_ticket_ = next_ticket_.fetch_add(1);
+        uint64_t my_ticket_ = next_ticket_.fetch_add(1);
         while (current_ticket_.load() != my_ticket_) {
             std::this_thread::yield();
         }
