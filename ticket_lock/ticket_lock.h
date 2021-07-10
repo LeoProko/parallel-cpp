@@ -1,20 +1,26 @@
 #pragma once
 
+#include <atomic>
+#include <thread>
 
 class TicketLock {
- public:
-  TicketLock() {
-  }
+private:
+    std::atomic<uint64_t> current_ticket_{0};
+    std::atomic<uint64_t> next_ticket_{0};
 
-  void Lock() {
-    // Your code
-  }
+public:
+    TicketLock() = default;
 
-  void Unlock() {
-    // Your code
-  }
+    void Lock() {
+        uint64_t my_ticket_ = next_ticket_.fetch_add(1);
+        while (current_ticket_.load() != my_ticket_) {
+            std::this_thread::yield();
+        }
+        
+    }
 
- private:
-  // Your code
+    void Unlock() {
+        current_ticket_.fetch_add(1);
+    }
 };
 
