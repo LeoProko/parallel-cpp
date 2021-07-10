@@ -3,17 +3,17 @@
 #include <atomic>
 #include <optional>
 
-template <typename T>
-struct Node {
-    T value;
-    Node* next;
-};
 
 
 template <typename T>
 class MPSCQueue {
 private:
-    std::atomic<Node<T>*> head_ = nullptr;
+    struct Node {
+        T value;
+        Node* next;
+    };
+    
+    std::atomic<Node*> head_ = nullptr;
 
 public:
     MPSCQueue() = default;
@@ -22,7 +22,7 @@ public:
     }
 
     void Push(const T& value) {
-        Node<T>* node = new Node<T>;
+        Node* node = new Node;
         node->value = value;
         for (;;) {
             node->next = head_;
@@ -33,10 +33,10 @@ public:
     }
 
     std::optional<T> Pop() {
-        Node<T>* node_to_remove;
+        Node* node_to_remove;
         for (;;) {
             node_to_remove = head_.load();
-            if (!head_ || (head_ && head_.compare_exchange_weak(node_to_remove, head_.load()->next))) {
+            if (!node_to_remove || head_.compare_exchange_weak(node_to_remove, node_to_remove->next)) {
                 break;
             }
         }
