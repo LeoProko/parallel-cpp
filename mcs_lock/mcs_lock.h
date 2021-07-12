@@ -12,7 +12,7 @@ struct Node {
 class MCSLock {
 private:
     std::atomic<Node*> tail{nullptr};
-    thread_local static inline Node node_;
+    thread_local static Node node_;
 
 public:
     MCSLock() = default;
