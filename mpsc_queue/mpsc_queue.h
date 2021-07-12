@@ -1,28 +1,44 @@
 #pragma once
 
+#include <atomic>
 #include <optional>
-
 
 template <typename T>
 class MPSCQueue {
- public:
-  MPSCQueue() {
-  }
+private:
+    struct Node {
+        T value;
+        Node* next;
+    };
+    
+    std::atomic<Node*> head_ = nullptr;
 
-  ~MPSCQueue() {
-    // Your code
-  }
+public:
+    MPSCQueue() = default;
 
-  void Push(const T& /*value*/) {
-    // Your code
-  }
+    ~MPSCQueue() {
+        while (Pop());
+    }
 
-  std::optional<T> Pop() {
-    return std::nullopt;
-    // Your code
-  }
+    void Push(const T& value) {
+        Node* node = new Node;
+        node->value = value;
+        do {
+            node->next = head_;
+        } while (!head_.compare_exchange_weak(node->next, node));
+    }
 
- private:
-  // Your code
+    std::optional<T> Pop() {
+        Node* node_to_remove;
+        do {
+            node_to_remove = head_.load();
+        } while (node_to_remove && !head_.compare_exchange_weak(node_to_remove, node_to_remove->next));
+        if (node_to_remove) {
+            T return_value = node_to_remove->value;
+            delete node_to_remove;
+            return return_value;
+        }
+        return std::nullopt;
+    }
 };
 
