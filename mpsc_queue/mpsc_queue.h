@@ -3,8 +3,6 @@
 #include <atomic>
 #include <optional>
 
-
-
 template <typename T>
 class MPSCQueue {
 private:
@@ -19,27 +17,22 @@ public:
     MPSCQueue() = default;
 
     ~MPSCQueue() {
+        while (Pop());
     }
 
     void Push(const T& value) {
         Node* node = new Node;
         node->value = value;
-        for (;;) {
+        do {
             node->next = head_;
-            if (head_.compare_exchange_weak(node->next, node)) {
-                return;
-            }
-        }
+        } while (!head_.compare_exchange_weak(node->next, node));
     }
 
     std::optional<T> Pop() {
         Node* node_to_remove;
-        for (;;) {
+        do {
             node_to_remove = head_.load();
-            if (!node_to_remove || head_.compare_exchange_weak(node_to_remove, node_to_remove->next)) {
-                break;
-            }
-        }
+        } while (node_to_remove && !head_.compare_exchange_weak(node_to_remove, node_to_remove->next));
         if (node_to_remove) {
             T return_value = node_to_remove->value;
             delete node_to_remove;
