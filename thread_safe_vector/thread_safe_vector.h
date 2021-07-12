@@ -23,6 +23,7 @@ public:
 
     size_t Size() const {
         std::shared_lock<std::shared_mutex> read_lock(read_mutex_);
+        std::shared_lock<std::shared_mutex> read_lock(write_mutex_);
         return vector_.size();
     }
 
